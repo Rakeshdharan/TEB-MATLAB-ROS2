@@ -14,41 +14,27 @@ This repository contains everything to reproduce the project you described: a RO
 /turtlebot3-matlab-navigation
 ├── README.md
 ├── ros2_ws
-│   └── src        # merge this with your existing workspace which has all the required pkgs as mentioned in the following steps
+│   └── src                  # merge this with your existing workspace which has all the required pkgs as mentioned in the following steps
 ├── matlab
-│   ├── ros_matlab_bridge.m          # main entrypoint that connects ROS↔MATLAB, starts subs/pubs
-│   ├── cmd_vel_publisher.m         # helper to publish Twist messages
-│   ├── odom_subscriber.m           # odom callback and storage
-│   ├── goal_subscriber.m           # goal callback that updates PoseHandle
-│   ├── map_loader.m                # load rst_lab_cropped.pgm -> binaryOccupancyMap
-│   ├── planners
-│   │   ├── global_planner.m        # top-level planner that calls RRT/PRM
-│   │   ├── plannerPRM_wrapper.m    # wrapper with parameter tuning
-│   │   └── plannerRRT_wrapper.m    # wrapper with parameter tuning
-│   ├── local_planner_teb.m         # optimizePath + ControllerTEB loop
-│   ├── visualize.m                 # map + robot + path visualization utilities
-│   ├── helpers
-│   │   ├── PoseHandle.m            # PoseHandle class (store current pose and goal)
-│   │   └── goalHandle2goalPose.m   # convert ROS PoseStamped -> MATLAB pose in map frame
-│   └── config
-│       ├── robot_params.mat        # controller / robot parameters
-│       └── rst_lab_cropped.pgm     # map file (NOT included if copyright; instructions to add)
+│   ├── Nav2.mlx             # the interactive matlab script/section wise control
+│   ├── PoseHandle.m         # helper to publish pose messages
+│   ├── rst_lab_cropped.pgm  # map file (copyrighted by RST Lab. TU Dortmund)
 └── readme_files
-    ├── xx                  # single-script demo to run everything
-    └── xx            # images and logs
+    ├── xx                   # image
+    └── xx                   # video
 ```
 
 ---
 
 ## What's included
 
-- A `ros_setup/install_turtlebot3.sh` script that automates the commands you listed (apt install, cloning the `humble-devel` branches, and `colcon build`).
+- ROS2, gazebo, rviz2 being used for the simulation and MATLAB is used to run the control algorithm including the different global and local mapping approaches.
 - MATLAB scripts for ROS 2 ↔ MATLAB communication (publisher/subscriber). Uses ROS Toolbox (MATLAB) `ros2` interface.
 - `PoseHandle` class to hold and visualize robot pose and global goal.
 - Map loader that converts the provided `rst_lab_cropped.pgm` into a `binaryOccupancyMap` and aligns its axes correctly for MATLAB plotting.
 - Implementations/wrappers for `plannerPRM` and `plannerRRT` and visualizers to plot the computed paths.
 - TEB local planner script that calls `optimizePath` and constructs a `controllerTEB` (or a custom TEB controller if MATLAB version lacks direct object), publishes `/cmd_vel` to drive the robot.
-- Example `run_demo.m` that shows a full run: connect to ROS, spawn simulation, set goal, run global planner, optimize, execute local planner, and visualize.
+- `Nav2.mlx` shows a full run: connect to ROS 2, set goal, run global planner, optimize, execute local planner, and visualize.
 
 ---
 
@@ -134,9 +120,4 @@ This MATLAB script has sections and easier to run:
 This project skeleton is released under the MIT License. All rights are reserved by RST Lab. at TU Dortmund.
 
 ---
-
-
----
-
-*Note:* The `rst_lab_cropped.pgm` map is not included in this repo for copyright/safety reasons — place it into `matlab/config/` (or run the script that downloads it if you have permission).
 
