@@ -1,126 +1,142 @@
-# TurtleBot3 Navigation with MATLAB & ROS2 (TEB + Global Planners)
+# TEB/MPC based navigation of TurtleBot3 (MATLAB ↔ ROS2)
 
-![ROS2](https://img.shields.io/badge/ROS2-Humble-blue) ![MATLAB](https://img.shields.io/badge/MATLAB-Robotics%20System%20Toolbox-orange) ![Gazebo](https://img.shields.io/badge/Gazebo-Simulation-lightgrey)
+**Repository:** teb-matlab-ros2
 
-A **portfolio robotics project** demonstrating end-to-end navigation for a TurtleBot3 robot using:
-- **Global planners**: PRM & RRT (MATLAB Robotics Toolbox)
-- **Local planner**: Timed Elastic Band (TEB)
-- **Simulation**: Gazebo + RViz with ROS2 Humble
-- **Integration**: MATLAB ↔ ROS2 bridge for real-time control
+**Purpose**
+
+This repository contains everything to reproduce the project you described: a ROS2 (Humble) TurtleBot3 Gazebo simulation integrated with MATLAB for global planning (RRT/PRM), a TEB-based local planner, visualization, and a ROS↔MATLAB bridge (publishers/subscribers and callbacks). The repo includes starter MATLAB code, a `PoseHandle` class, mapping utilities, planner scripts, visualizers, and a comprehensive `README.md` with step-by-step instructions.
 
 ---
 
-## 🚀 Features
-- MATLAB ROS2 node that subscribes to odometry, receives goal poses, and publishes velocity commands.
-- Global path planning using PRM or RRT on a binary occupancy map.
-- Path optimization using TEB (`optimizePath` + `controllerTEB`).
-- Visualization in MATLAB (map, planned path, optimized trajectory).
-- ROS2 launch files for Gazebo simulation and Navigation2.
-- Extendable to **real TurtleBot3 robot** with ROS1 bringup.
+## Repo structure
 
----
-
-## 🗂 Project Structure
 ```
-TurtleBot3-Navigation-TEB-MATLAB-ROS2/
-├─ README.md
-├─ LICENSE
-├─ docs/
-│  ├─ overview_diagram.png
-│  ├─ demo_rviz.gif
-│  └─ demo_matlab.gif
-├─ ros2_ws/
-│  ├─ src/mobile_navigation/        # ROS2 package (bridge + launch files)
-│  └─ src/additional_files/         # provided lab files (maps, URDFs)
-├─ matlab/
-│  ├─ ros_matlab_node.m             # main script (MATLAB ROS2 node)
-│  ├─ PoseHandle.m                  # helper class
-│  ├─ goalHandle2goalPose.m         # transform goal poses
-│  ├─ ControllerTEB.m               # wrapper for TEB controller
-│  └─ planners_demo.m               # demo of PRM/RRT only
-├─ simulations/
-│  ├─ gazebo_worlds/rst_lab.world
-│  └─ rviz_configs/
-└─ results/
-   ├─ path_planning_results.png
-   └─ teb_navigation.gif
+/turtlebot3-matlab-navigation
+├── README.md
+├── ros2_ws
+│   └── src        # merge this with your existing workspace which has all the required pkgs as mentioned in the following steps
+├── matlab
+│   ├── ros_matlab_bridge.m          # main entrypoint that connects ROS↔MATLAB, starts subs/pubs
+│   ├── cmd_vel_publisher.m         # helper to publish Twist messages
+│   ├── odom_subscriber.m           # odom callback and storage
+│   ├── goal_subscriber.m           # goal callback that updates PoseHandle
+│   ├── map_loader.m                # load rst_lab_cropped.pgm -> binaryOccupancyMap
+│   ├── planners
+│   │   ├── global_planner.m        # top-level planner that calls RRT/PRM
+│   │   ├── plannerPRM_wrapper.m    # wrapper with parameter tuning
+│   │   └── plannerRRT_wrapper.m    # wrapper with parameter tuning
+│   ├── local_planner_teb.m         # optimizePath + ControllerTEB loop
+│   ├── visualize.m                 # map + robot + path visualization utilities
+│   ├── helpers
+│   │   ├── PoseHandle.m            # PoseHandle class (store current pose and goal)
+│   │   └── goalHandle2goalPose.m   # convert ROS PoseStamped -> MATLAB pose in map frame
+│   └── config
+│       ├── robot_params.mat        # controller / robot parameters
+│       └── rst_lab_cropped.pgm     # map file (NOT included if copyright; instructions to add)
+└── readme_files
+    ├── xx                  # single-script demo to run everything
+    └── xx            # images and logs
 ```
 
 ---
 
-## ⚙️ Requirements
-- **Software**:
-  - Ubuntu 22.04 LTS
-  - ROS2 Humble (Navigation2, TurtleBot3 packages)
-  - Gazebo (Fortress or Garden)
-  - MATLAB (Robotics System Toolbox)
-  - colcon CLI
-- **Hardware (optional)**:
-  - TurtleBot3 Burger/Waffle Pi
-  - Raspberry Pi (ROS1 bringup)
+## What's included
+
+- A `ros_setup/install_turtlebot3.sh` script that automates the commands you listed (apt install, cloning the `humble-devel` branches, and `colcon build`).
+- MATLAB scripts for ROS 2 ↔ MATLAB communication (publisher/subscriber). Uses ROS Toolbox (MATLAB) `ros2` interface.
+- `PoseHandle` class to hold and visualize robot pose and global goal.
+- Map loader that converts the provided `rst_lab_cropped.pgm` into a `binaryOccupancyMap` and aligns its axes correctly for MATLAB plotting.
+- Implementations/wrappers for `plannerPRM` and `plannerRRT` and visualizers to plot the computed paths.
+- TEB local planner script that calls `optimizePath` and constructs a `controllerTEB` (or a custom TEB controller if MATLAB version lacks direct object), publishes `/cmd_vel` to drive the robot.
+- Example `run_demo.m` that shows a full run: connect to ROS, spawn simulation, set goal, run global planner, optimize, execute local planner, and visualize.
 
 ---
 
-## ▶️ How to Run
+## Quickstart (summary)
 
-### 1. Simulation with ROS2 + Gazebo
+**Prerequisites**
+- Ubuntu 22.04, ROS 2 Humble with desktop and Gazebo support installed.
+- MATLAB R2022b or later with the following toolboxes:
+  - Robotics System Toolbox
+  - ROS Toolbox (ROS 2 support)
+  - Navigation Toolbox (plannerPRM, plannerRRT, optimizePath)
+  - (optional) Optimization Toolbox
+- `colcon` and build tools for ROS 2.
+
+**1. Install TurtleBot3 & dependencies (on Linux)**
+
+Execute the commands manually to install the required pkgs:
+
 ```bash
-cd ros2_ws
-colcon build --symlink-install
-source install/setup.bash
+sudo apt update
+sudo apt install -y ros-humble-nav* ros-humble-cartographer* ros-humble-rmw-cyclonedds-cpp
 
-# Launch Gazebo world
+# Clone turtlebot3 repos into your workspace
+cd ~/catkin_ws/src/
+git clone https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git -b humble-devel
+git clone https://github.com/ROBOTIS-GIT/turtlebot3.git -b humble-devel
+git clone https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git -b humble-devel
+git clone https://github.com/ROBOTIS-GIT/DynamixelSDK.git -b humble-devel
+
+cd ~/catkin_ws && colcon build
+source ~/catkin_ws/install/setup.bash
+# set model
+echo "export TURTLEBOT3_MODEL=waffle" >> ~/.profile
+
+# Merge the ros2_ws/src (provided in this repo) with your local workspace catkin_ws/src as it included the required launch files and map for the project.
+
+# Build again
+cd ~/catkin_ws && colcon build
+
+# Start simulation (After successful build)
 ros2 launch turtlebot3_gazebo turtlebot3_rst_lab.launch.py
 
-# Launch Navigation2
+# Start navigation (launches all the required nodes)
 ros2 launch turtlebot3_navigation2 navigation2_rst_lab.launch.py use_sim_time:=True
 ```
-- In RViz: set initial pose, publish navigation goals.
 
-### 2. MATLAB Node (Bridge)
+**2. Setup MATLAB**
+
+- Open MATLAB and add the `matlab/` folder to the path.
+- Make sure MATLAB's ROS 2 node connects to the same DDS domain as the ROS2 simulation (CycloneDDS default). If needed, set `RMW` env variables in your shell before launching MATLAB (or launch MATLAB from a shell where you source ROS setup).
+- Setting same ROS_DOMAIN_ID is really important to sync the connection between MATLAB and ROS_MASTER.
+
+**3. Run the demo**
+
+From MATLAB:
+
 ```matlab
-setenv('RMW_IMPLEMENTATION','rmw_fastrtps_cpp')
-setenv('ROS_DOMAIN_ID','30')
-ros_matlab_node();
+open('matlab/Nav2.mlx')
 ```
-- Subscribes to `/odom`
-- Publishes to `/cmd_vel`
-- Subscribes to `/goal_pose`
 
-### 3. Real TurtleBot3 (Optional)
-- Run ROS1 bringup on the robot:
-```bash
-export TURTLEBOT3_MODEL=burger
-roslaunch turtlebot3_bringup turtlebot3_robot.launch
-```
-- On laptop/PC: run MATLAB node to connect via ROS master.
+This MATLAB script has sections and easier to run:
+- connects to the ROS2 network,
+- subscribes to `/odom`, `/goal_pose`,
+- publishes to `/cmd_vel`,
+- loads the `rst_lab_cropped.pgm` map,
+- computes a global path (RRT or PRM),
+- optimizes it (TEB), and
+- executes and visualizes motion.
 
 ---
 
-## 📊 Results
-- Global planners (PRM/RRT) generate collision-free paths.
-- TEB local planner optimizes trajectory and follows it in simulation.
-- MATLAB visualizes robot progress and planned vs optimized paths.
+## Important implementation notes
 
-*(See `results/` for figures and GIFs.)*
-
----
-
-## 🔮 Future Improvements
-- Dynamic obstacle avoidance
-- Multi-robot navigation
-- Learning-based global planners
-- ROS2-native MATLAB interfaces
+- **Coordinate frames:** ROS (Gazebo) uses `x-forward`, `y-left`, `z-up`. The `.pgm` map axis and MATLAB axes can be flipped — the helper `goalHandle2goalPose.m` ensures conversions are correct.
+- **ROS↔MATLAB transports:** Use MATLAB ROS Toolbox `ros2node`, `ros2publisher`, `ros2subscriber` and message helpers like `ros2message` for Twist and PoseStamped messages.
+- **Replanning:** The local planner monitors feasibility; if `optimizePath` fails or local controller cannot follow, the script triggers `global_planner.m` to produce a new path.
+- **Timing / sim time:** Use `use_sim_time := true` in the ROS2 navigation launch and ensure MATLAB respects simulated time if you want playback control.
 
 ---
 
-## 📜 License
-MIT License — free to use, adapt, and share.
+## License
+
+This project skeleton is released under the MIT License. All rights are reserved by RST Lab. at TU Dortmund.
 
 ---
 
-## 🙌 Acknowledgements
-- ROS2 Navigation2 stack
-- MathWorks Robotics System Toolbox
-- TurtleBot3 by ROBOTIS
+
+---
+
+*Note:* The `rst_lab_cropped.pgm` map is not included in this repo for copyright/safety reasons — place it into `matlab/config/` (or run the script that downloads it if you have permission).
 
