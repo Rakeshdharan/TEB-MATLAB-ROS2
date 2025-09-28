@@ -101,8 +101,11 @@ This MATLAB script has sections and easier to run:
 - publishes to `/cmd_vel`,
 - loads the `rst_lab_cropped.pgm` map,
 - computes a global path (RRT or PRM),
+![Global path](readme_files/Global_plan.png)
 - optimizes it (TEB), and
+![Optimized path](readme_files/Optimized_plan.png)
 - executes and visualizes motion.
+![Motion](readme_files/TEB_Navigation.png)
 
 ---
 
