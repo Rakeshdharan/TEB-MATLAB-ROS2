@@ -6,6 +6,8 @@
 
 This repository contains everything to reproduce the project you described: a ROS2 (Humble) TurtleBot3 Gazebo simulation integrated with MATLAB for global planning (RRT/PRM), a TEB-based local planner, visualization, and a ROS↔MATLAB bridge (publishers/subscribers and callbacks). The repo includes starter MATLAB code, a `PoseHandle` class, mapping utilities, planner scripts, visualizers, and a comprehensive `README.md` with step-by-step instructions.
 
+Find more info about TEB [here](https://wiki.ros.org/teb_local_planner).
+
 ---
 
 ## Repo structure
@@ -28,7 +30,7 @@ This repository contains everything to reproduce the project you described: a RO
 
 ## What's included
 
-- ROS2, gazebo, rviz2 being used for the simulation and MATLAB is used to run the control algorithm including the different global and local mapping approaches.
+- ROS2, gazebo, rviz2 being used for the simulation and MATLAB is used to run the control algorithm including the processing of different global and local mapping approaches.
 - MATLAB scripts for ROS 2 ↔ MATLAB communication (publisher/subscriber). Uses ROS Toolbox (MATLAB) `ros2` interface.
 - `PoseHandle` class to hold and visualize robot pose and global goal.
 - Map loader that converts the provided `rst_lab_cropped.pgm` into a `binaryOccupancyMap` and aligns its axes correctly for MATLAB plotting.
