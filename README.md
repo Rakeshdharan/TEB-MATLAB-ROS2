@@ -22,8 +22,8 @@ Find more info about TEB [here](https://wiki.ros.org/teb_local_planner).
 │   ├── PoseHandle.m         # helper to publish pose messages
 │   ├── rst_lab_cropped.pgm  # map file (copyrighted by RST Lab. TU Dortmund)
 └── readme_files
-    ├── xx                   # image
-    └── xx                   # video
+    ├── global, local/optimized paths  # image
+    └── Real-time Navigation video     # video
 ```
 
 ---
@@ -119,6 +119,10 @@ This MATLAB script has sections and easier to run:
 - **Timing / sim time:** Use `use_sim_time := true` in the ROS2 navigation launch and ensure MATLAB respects simulated time if you want playback control.
 
 ---
+## Demo
+Here is the real-time run of the turtlebot3 where it tried to navigate to the goal pose which was requested as 2D goal pose in rviz2. Then MATLAB receives the goal pose and further section in the mlx script, generates global path (PRM or RRT) where RRT was performing well than PRM. Then the path was optimized for TEB local planner. Then the /cmd_vel topic is published by the MATLAB node, then received by the ROS MASTER or the respective node in the robot which drives the robot.
+
+![Real-time Navigation (TurtleBot3 Waffle Pi)](readme_files/Nav_vid1.mp4)
 
 ## License
 
